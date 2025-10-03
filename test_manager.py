@@ -128,7 +128,22 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 		def get_config(self, i, pt, _cb_act, _out, view, running=False):	
 			if not running:
 				styles = get_test_styles(view)
-				content = open(root_dir + '/Highlight/test_config.html').read()
+				
+				# Determine if we should show diff buttons
+				show_diff = False
+				diff_button = ''
+				diff2_button = ''
+				if _out and str(self.rtcode) == '0' and not self.is_correct_answer(_out):
+					show_diff = True
+					diff_button = '<a class="config config-diff" href="test-diff">diff</a>'
+					diff2_button = '<a class="config config-diff2" href="test-diff2">diff2</a>'
+				
+				# Choose template based on whether diff is available
+				if show_diff:
+					content = open(root_dir + '/Highlight/test_config_with_diff.html').read()
+				else:
+					content = open(root_dir + '/Highlight/test_config.html').read()
+					
 				test_type = ''
 				if self.is_correct_answer(_out):
 					test_type = 'test-accept'
@@ -136,11 +151,20 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 				if str(self.rtcode) != '0':
 					test_type = 'test-decline'
 
-				content = content.format(
-					test_id=i,
-					runtime=self.get_nice_runtime(),
-					test_type=test_type
-				)
+				if show_diff:
+					content = content.format(
+						test_id=i,
+						runtime=self.get_nice_runtime(),
+						test_type=test_type,
+						diff_button=diff_button,
+						diff2_button=diff2_button
+					)
+				else:
+					content = content.format(
+						test_id=i,
+						runtime=self.get_nice_runtime(),
+						test_type=test_type
+					)
 				content = '<style>' + styles + '</style>' + content
 
 				def onclick(event, cb=_cb_act, i=i):
@@ -501,7 +525,7 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 	def on_test_action(self, i, event):
 		v = self.view
 		tester = self.tester
-		if tester.proc_run and event in {'test-click', 'test-edit', 'test-run'}:
+		if tester.proc_run and event in {'test-click', 'test-edit', 'test-run', 'test-diff', 'test-diff2'}:
 			sublime.status_message('can not {action} while process running'.format(action=event))
 			return
 		if event == 'test-click':	
@@ -510,6 +534,10 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 			self.open_test_edit(i)
 		elif event == 'test-stop':
 			tester.terminate()
+		elif event == 'test-diff':
+			self.show_test_diff(i)
+		elif event == 'test-diff2':
+			self.show_test_diff2(i)
 		elif event == 'test-run':
 			if not tester.tests[i].fold:
 				self.toggle_fold(i)
@@ -664,6 +692,177 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 	def memorize_tests(self):
 		with open(get_tests_file_path(self.dbg_file), 'w') as f:
 			f.write(sublime.encode_value([x.memorize() for x in (self.tester.get_tests())], True))
+
+	def show_test_diff(self, test_id):
+		"""显示指定测试用例的 diff"""
+		v = self.view
+		tester = self.tester
+		
+		if test_id >= len(tester.tests) or test_id >= len(tester.prog_out):
+			sublime.status_message('Test not found')
+			return
+			
+		actual_output = tester.prog_out[test_id].rstrip()
+		test_case = tester.tests[test_id]
+		
+		# 获取期望输出（如果有多个正确答案，取第一个）
+		if test_case.correct_answers:
+			expected_output = list(test_case.correct_answers)[0].rstrip()
+		else:
+			expected_output = "(No expected output defined)"
+		
+		# 创建更直观的 diff 格式
+		expected_lines = expected_output.splitlines()
+		actual_lines = actual_output.splitlines()
+		
+		# 构建 diff 内容，避免缩进问题
+		lines = []
+		lines.append('=' * 60)
+		lines.append('TEST {0} COMPARISON'.format(test_id))
+		lines.append('=' * 60)
+		lines.append('')
+		
+		# 显示完整的期望输出
+		lines.append('EXPECTED OUTPUT:')
+		lines.append('-' * 40)
+		if expected_lines:
+			for i, line in enumerate(expected_lines, 1):
+				lines.append('{0:3}: {1}'.format(i, line))
+		else:
+			lines.append('(empty)')
+		lines.append('')
+		
+		# 显示完整的实际输出
+		lines.append('ACTUAL OUTPUT:')
+		lines.append('-' * 40)
+		if actual_lines:
+			for i, line in enumerate(actual_lines, 1):
+				lines.append('{0:3}: {1}'.format(i, line))
+		else:
+			lines.append('(empty)')
+		lines.append('')
+		
+		# 显示逐行差异
+		lines.append('LINE-BY-LINE DIFFERENCES:')
+		lines.append('-' * 40)
+		
+		max_lines = max(len(expected_lines), len(actual_lines)) if expected_lines or actual_lines else 0
+		has_diff = False
+		
+		for i in range(max_lines):
+			expected_line = expected_lines[i] if i < len(expected_lines) else ''
+			actual_line = actual_lines[i] if i < len(actual_lines) else ''
+			
+			if expected_line != actual_line:
+				has_diff = True
+				lines.append('Line {0}:'.format(i + 1))
+				lines.append('  Expected: "{0}"'.format(expected_line))
+				lines.append('  Actual  : "{0}"'.format(actual_line))
+				
+				# 字符级别的差异分析
+				if expected_line and actual_line:
+					diff_chars = []
+					min_len = min(len(expected_line), len(actual_line))
+					for j in range(min_len):
+						if expected_line[j] != actual_line[j]:
+							diff_chars.append(str(j))
+					if len(expected_line) != len(actual_line):
+						diff_chars.append('length')
+					if diff_chars:
+						lines.append('  Differs at: {0}'.format(', '.join(diff_chars)))
+				lines.append('')
+		
+		if not has_diff:
+			lines.append('No line differences found.')
+			# 检查是否是尾随空格或换行符的问题
+			if expected_output != actual_output:
+				lines.append('')
+				lines.append('Note: Outputs differ in whitespace/newlines only.')
+				lines.append('Expected length: {0}'.format(len(expected_output)))
+				lines.append('Actual length  : {0}'.format(len(actual_output)))
+		
+		# 调试：打印生成的行数
+		
+		# 创建新窗口显示 diff
+		diff_view = v.window().new_file()
+		diff_view.set_name('Diff - Test {0}'.format(test_id))
+		diff_view.set_scratch(True)
+		
+		# 禁用自动缩进等可能影响格式的设置
+		diff_view.settings().set('auto_indent', False)
+		diff_view.settings().set('smart_indent', False)
+		diff_view.settings().set('indent_to_bracket', False)
+		diff_view.settings().set('tab_completion', False)
+		
+		# 插入 diff 内容
+		diff_text = '\n'.join(lines)
+		
+		# 调试：确保内容不为空
+		if not diff_text.strip():
+			diff_text = 'ERROR: No diff content generated'
+		
+		# 使用自定义命令插入内容，避免缩进问题
+		diff_view.run_command('test_manager_insert_diff', {'content': diff_text})
+		diff_view.set_read_only(True)
+
+	def show_test_diff2(self, test_id):
+		"""使用 Sublime Text 内置 diff 视图显示指定测试用例的差异"""
+		v = self.view
+		tester = self.tester
+		
+		if test_id >= len(tester.tests) or test_id >= len(tester.prog_out):
+			sublime.status_message('Test not found')
+			return
+			
+		actual_output = tester.prog_out[test_id].rstrip()
+		test_case = tester.tests[test_id]
+		
+		# 获取期望输出（如果有多个正确答案，取第一个）
+		if test_case.correct_answers:
+			expected_output = list(test_case.correct_answers)[0].rstrip()
+		else:
+			expected_output = "(No expected output defined)"
+		
+		# 创建临时文件来存储期望输出和实际输出
+		import tempfile
+		import os
+		
+		# 创建临时目录
+		temp_dir = tempfile.mkdtemp()
+		
+		# 创建期望输出文件
+		expected_file = os.path.join(temp_dir, 'expected_test_{0}.txt'.format(test_id))
+		with open(expected_file, 'w', encoding='utf-8') as f:
+			f.write(expected_output)
+		
+		# 创建实际输出文件
+		actual_file = os.path.join(temp_dir, 'actual_test_{0}.txt'.format(test_id))
+		with open(actual_file, 'w', encoding='utf-8') as f:
+			f.write(actual_output)
+		
+		# 打开期望输出文件
+		expected_view = v.window().open_file(expected_file)
+		expected_view.set_name('Expected - Test {0}'.format(test_id))
+		expected_view.set_scratch(True)
+		
+		# 打开实际输出文件  
+		actual_view = v.window().open_file(actual_file)
+		actual_view.set_name('Actual - Test {0}'.format(test_id))
+		actual_view.set_scratch(True)
+		
+		# 延迟执行 diff 命令，确保文件已加载
+		def run_diff():
+			try:
+				# 使用 Sublime Text 的内置 diff 功能（不使用 labels 参数）
+				v.window().run_command('diff_files', {
+					'files': [expected_file, actual_file]
+				})
+			except Exception as e:
+				# 如果 diff_files 命令不可用，尝试使用其他方法
+				sublime.status_message('Built-in diff not available. Using external diff view.')
+		
+		# 延迟100ms执行diff，确保文件加载完成
+		sublime.set_timeout(run_diff, 100)
 
 	def on_insert(self, s):
 		self.view.run_command('test_manager', {'action': 'insert_opd_input', 'text': s})
@@ -1307,9 +1506,12 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 
 		elif action == 'close':
 			try:
-				self.process_manager.terminate()
-			except:
-				print('[FastOlympicCoding] process terminating error')
+				if hasattr(self, 'process_manager') and self.process_manager:
+					self.process_manager.terminate()
+				else:
+					print('[FastOlympicCoding] No active process to terminate')
+			except Exception as e:
+				print('[FastOlympicCoding] process terminating error: {0}'.format(str(e)))
 			# v.run_command('test_manager', {'action': 'erase_all'})
 
 		elif action == 'redirect_frames':
@@ -1646,3 +1848,12 @@ class LayoutListener(sublime_plugin.EventListener):
 
 	# def on_new(self, view):
 	# 	self.move_syncer(view)
+
+
+class TestManagerInsertDiffCommand(sublime_plugin.TextCommand):
+	"""自定义插入命令，避免自动缩进问题"""
+	def run(self, edit, content):
+		# 清除所有选择
+		self.view.sel().clear()
+		# 在文档开头插入内容
+		self.view.insert(edit, 0, content)

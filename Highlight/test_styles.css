@@ -44,6 +44,14 @@ a {
 	background-color: var(--action-color);
 }
 
+.config-diff {
+	background-color: color(var(--orangish) alpha(0.3));
+}
+
+.config-diff2 {
+	background-color: color(var(--purplish) alpha(0.3));
+}
+
 .config-action {
 	background-color: var(--action-color);
 }

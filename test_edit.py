@@ -255,9 +255,12 @@ class TestEditCommand(sublime_plugin.TextCommand):
 
 		elif action == 'close':
 			try:
-				self.process_manager.terminate()
-			except:
-				print('[FastOlympicCoding] process terminating error')
+				if hasattr(self, 'process_manager') and self.process_manager:
+					self.process_manager.terminate()
+				else:
+					print('[FastOlympicCoding] No active process to terminate')
+			except Exception as e:
+				print('[FastOlympicCoding] process terminating error: {0}'.format(str(e)))
 			# v.run_command('test_manager', {'action': 'erase_all'})
 
 		elif action == 'redirect_frames':
