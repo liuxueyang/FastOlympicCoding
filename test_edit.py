@@ -224,6 +224,11 @@ class TestEditCommand(sublime_plugin.TextCommand):
 		elif action == 'insert_cb':
 			self.insert_cb(edit)
 
+		elif action == 'end_input':
+			if self.tester and self.tester.proc_run:
+				self.tester.end_input()
+				sublime.status_message('Input ended (EOF sent)')
+
 		elif action == 'insert_opd_input':
 			v.insert(edit, self.delta_input, text)
 			self.delta_input += len(text)

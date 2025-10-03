@@ -49,6 +49,13 @@
 		}
 	},
 	{
+		"caption": "FastOlympicCoding: End Input (Send EOF)",
+		"command": "test_manager",
+		"args": {
+			"action": "end_input"
+		}
+	},
+	{
 		"caption": "FastOlympicCoding: Submit",
 		"command": "contest_handler",
 		"args": {

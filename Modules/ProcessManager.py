@@ -114,6 +114,11 @@ class ProcessManager(object):
 			self.process.stdin.write(s)
 			self.process.stdin.flush()
 
+	def close_stdin(self):
+		"""Close stdin to send EOF signal to the process"""
+		if self.process.poll() is None and self.process.stdin:
+			self.process.stdin.close()
+
 	def communicate(self, s, timeout=None):
 		return self.process.communicate(input=s, timeout=timeout)
 

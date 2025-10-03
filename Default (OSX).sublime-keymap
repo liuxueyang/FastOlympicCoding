@@ -99,6 +99,28 @@
 		]
 	},
 
+	// End input (send EOF)
+	{
+		"keys": ["ctrl+d"],
+		"command": "test_manager",
+		"args": {
+			"action": "end_input"
+		},
+		"context": [
+			{
+				"operand": "source.TestSyntax",
+				"operator": "equal",
+				"match_all": true,
+				"key": "selector"
+			},
+			{
+				"key": "setting.edit_mode",
+				"operator": "equal",
+				"operand": false
+			}
+		]
+	},
+
 	// Paste
 	{
 		"keys": ["super+v"],
@@ -162,7 +184,7 @@
 
 	// Delete Test
 	{
-		"keys": ["ctrl+d"],
+		"keys": ["cmd+delete"],
 		"command": "test_manager",
 		"args": {
 			"action": "delete_tests"

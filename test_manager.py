@@ -265,7 +265,12 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 				if call_on_insert:
 					self.on_insert(s)
 
-		def insert_test(self, id=None):
+		def end_input(self):
+			"""End input by closing stdin to send EOF signal"""
+			if self.proc_run and type(self.process_manager) == ProcessManager:
+				self.process_manager.close_stdin()
+
+		def insert_test(self, id=None, auto_close_stdin=None):
 			if id is None:
 				id = self.test_iter
 			# n = self.test_iter
@@ -277,6 +282,15 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 			self.proc_run = True
 			self.process_manager.run()
 			self.process_manager.write(tests[id].test_string)
+			
+			# Determine whether to auto-close stdin
+			if auto_close_stdin is None:
+				# Auto-close if test has content (pre-loaded test), keep open if empty (manual input)
+				auto_close_stdin = bool(tests[id].test_string.strip())
+			
+			# Close stdin to send EOF signal after writing all input (if determined necessary)
+			if auto_close_stdin and type(self.process_manager) == ProcessManager:
+				self.process_manager.close_stdin()
 			self.on_insert(tests[id].test_string)
 
 		def next_test(self, tie_pos, cb):
@@ -312,7 +326,7 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 			self.running_test = id
 			self.running_new = False
 			self.prog_out[id] = ''
-			self.insert_test(id)
+			self.insert_test(id, auto_close_stdin=True)
 			if type(self.process_manager) == ProcessManager:
 				sublime.set_timeout_async(self.__process_listener)
 
@@ -1261,6 +1275,11 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 
 		elif action == 'insert_cb':
 			self.insert_cb(edit)
+
+		elif action == 'end_input':
+			if self.tester and self.tester.proc_run:
+				self.tester.end_input()
+				sublime.status_message('Input ended (EOF sent)')
 
 		elif action == 'insert_opd_input':
 			v.insert(edit, self.delta_input, text)
