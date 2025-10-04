@@ -535,14 +535,14 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 
 			# solution 2
 			window = v.window()
-			# 新建 buffer
+			# create buffer
 			answer_view = window.new_file()
 			answer_view.set_name('Test %d - Correct Output' % (i + 1))
 			answer_view.set_scratch(True)
 			answer_view.set_read_only(False)
 			answer_view.run_command('append', {'characters': answer})
 			answer_view.set_read_only(True)
-			# 放到右侧分组
+			# place to the right group
 			window.set_view_index(answer_view, 1, 0)
 			window.focus_view(answer_view)
 
@@ -629,6 +629,20 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 					self.view
 				)
 				configs.append(accdec)
+			
+			if not running and not tester.tests[i].fold and str(tester.tests[i].rtcode) == '0' and tester.prog_out[i]:
+				answer_template = open(root_dir + '/Highlight/test_answer.html').read()
+				correct_answers = tester.tests[i].correct_answers
+				if correct_answers:
+					correct_text = '\n'.join(correct_answers)
+				else:
+					correct_text = '// No correct answers recorded'
+
+				answer_html = answer_template.format(correct_text=correct_text)
+				styles = get_test_styles(self.view)
+				answer_html = '<style>' + styles + '</style>' + answer_html
+				answer_phantom = Phantom(Region(pt), answer_html, sublime.LAYOUT_BLOCK)
+				configs.append(answer_phantom)
 
 			if not tester.tests[i].fold:
 				pt += 2

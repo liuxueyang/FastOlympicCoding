@@ -28,6 +28,17 @@ a {
 	background-color: color(var(--redish) alpha(0.3));
 }
 
+.config-answer {
+    background: color(var(--greenish) alpha(0.2));
+    border-radius: 3px;
+    margin-left: 4px;
+    padding: 2px 6px;
+    font-weight: bold;
+}
+.test-answer {
+    margin: 6px 0;
+}
+
 .sep {
 	text-decoration: none;
 }
@@ -64,4 +75,3 @@ a {
     border-radius: 3px;
     margin-left: 4px;
 }
-
