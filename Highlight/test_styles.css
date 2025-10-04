@@ -25,7 +25,7 @@ a {
 }
 
 .test-decline {
-	background-color: color(var(--redish) alpha(0.3));
+	background-color: color(var(--orangish) alpha(0.3));
 }
 
 .config-answer {
@@ -71,13 +71,19 @@ a {
 }
 
 .config-answer {
-    background: color(var(--greenish) alpha(0.2));
+    background-color: color(var(--purplish) alpha(0.2));
     border-radius: 3px;
     margin-left: 4px;
 }
 
 .config-copy-input {
-    background: color(var(--yellowish) alpha(0.2));
+    background-color: color(var(--yellowish) alpha(0.4));
+    border-radius: 3px;
+    margin-left: 4px;
+}
+
+.config-delete {
+    background-color: color(var(--redish) alpha(0.4));
     border-radius: 3px;
     margin-left: 4px;
 }

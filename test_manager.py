@@ -487,7 +487,7 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 	def on_test_action(self, i, event):
 		v = self.view
 		tester = self.tester
-		if tester.proc_run and event in {'test-click', 'test-edit', 'test-run', 'test-show-answer', 'test-copy-input'}:
+		if tester.proc_run and event in {'test-click', 'test-edit', 'test-run', 'test-show-answer', 'test-copy-input', 'test-delete'}:
 			sublime.status_message('can not {action} while process running'.format(action=event))
 			return
 		if event == 'test-click':	
@@ -556,6 +556,9 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 			test_input = tester.tests[i].test_string
 			sublime.set_clipboard(test_input)
 			sublime.status_message('测试用例输入已复制到剪贴板')
+		elif event == 'test-delete':
+			self.view.run_command('test_manager', {'action': 'delete_test', 'id': i})
+			sublime.status_message('测试用例已删除')
 
 	def on_accdec_action(self, i, event):
 		v = self.view
