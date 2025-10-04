@@ -487,7 +487,7 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 	def on_test_action(self, i, event):
 		v = self.view
 		tester = self.tester
-		if tester.proc_run and event in {'test-click', 'test-edit', 'test-run'}:
+		if tester.proc_run and event in {'test-click', 'test-edit', 'test-run', 'test-show-answer'}:
 			sublime.status_message('can not {action} while process running'.format(action=event))
 			return
 		if event == 'test-click':	
@@ -518,6 +518,33 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 
 			tester.run_test(i)	
 			self.update_configs()
+		elif event == 'test-show-answer':
+			if tester.tests[i].correct_answers:
+				answer = '\n'.join(tester.tests[i].correct_answers)
+			else:
+				answer = '// No correct answers recorded'
+			# sublime.message_dialog('Correct answers for Test %d:\n\n%s' % (i + 1, answer))
+			
+			# solution 1
+			# window = v.window()
+			# panel = window.create_output_panel('test_answer')
+			# panel.set_read_only(False)
+			# panel.run_command('append', {'characters': 'Correct answers for Test %d:\n%s' % (i + 1, answer)})
+			# panel.set_read_only(True)
+			# window.run_command('show_panel', {'panel': 'output.test_answer'})
+
+			# solution 2
+			window = v.window()
+			# 新建 buffer
+			answer_view = window.new_file()
+			answer_view.set_name('Test %d - Correct Output' % (i + 1))
+			answer_view.set_scratch(True)
+			answer_view.set_read_only(False)
+			answer_view.run_command('append', {'characters': answer})
+			answer_view.set_read_only(True)
+			# 放到右侧分组
+			window.set_view_index(answer_view, 1, 0)
+			window.focus_view(answer_view)
 
 	def on_accdec_action(self, i, event):
 		v = self.view
