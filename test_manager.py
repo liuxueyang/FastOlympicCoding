@@ -487,7 +487,7 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 	def on_test_action(self, i, event):
 		v = self.view
 		tester = self.tester
-		if tester.proc_run and event in {'test-click', 'test-edit', 'test-run', 'test-show-answer'}:
+		if tester.proc_run and event in {'test-click', 'test-edit', 'test-run', 'test-show-answer', 'test-copy-input'}:
 			sublime.status_message('can not {action} while process running'.format(action=event))
 			return
 		if event == 'test-click':	
@@ -519,6 +519,13 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 			tester.run_test(i)	
 			self.update_configs()
 		elif event == 'test-show-answer':
+			# Disable answer button for this action
+			'''
+			<a class="config config-answer" href="test-show-answer">
+    			answer
+    		</a>
+			'''
+
 			if tester.tests[i].correct_answers:
 				answer = '\n'.join(tester.tests[i].correct_answers)
 			else:
@@ -545,6 +552,10 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 			# place to the right group
 			window.set_view_index(answer_view, 1, 0)
 			window.focus_view(answer_view)
+		elif event == 'test-copy-input':
+			test_input = tester.tests[i].test_string
+			sublime.set_clipboard(test_input)
+			sublime.status_message('测试用例输入已复制到剪贴板')
 
 	def on_accdec_action(self, i, event):
 		v = self.view
@@ -636,7 +647,7 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 				if correct_answers:
 					correct_text = '\n'.join(correct_answers)
 				else:
-					correct_text = '// No correct answers recorded'
+					correct_text = 'No answers'
 
 				answer_html = answer_template.format(correct_text=correct_text)
 				styles = get_test_styles(self.view)

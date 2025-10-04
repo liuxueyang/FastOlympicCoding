@@ -75,3 +75,9 @@ a {
     border-radius: 3px;
     margin-left: 4px;
 }
+
+.config-copy-input {
+    background: color(var(--yellowish) alpha(0.2));
+    border-radius: 3px;
+    margin-left: 4px;
+}
