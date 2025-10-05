@@ -555,10 +555,10 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 		elif event == 'test-copy-input':
 			test_input = tester.tests[i].test_string
 			sublime.set_clipboard(test_input)
-			sublime.status_message('测试用例输入已复制到剪贴板')
+			sublime.status_message('Copied to clipboard')
 		elif event == 'test-delete':
 			self.view.run_command('test_manager', {'action': 'delete_test', 'id': i})
-			sublime.status_message('测试用例已删除')
+			sublime.status_message('Test case deleted')
 
 	def on_accdec_action(self, i, event):
 		v = self.view
@@ -629,20 +629,6 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 				pt += len(tester.tests[i].test_string) + len(tester.prog_out[i]) + 2
 			elif not tester.tests[i].fold:
 				pt += len(tester.tests[i].test_string) + len(tester.prog_out[i]) + 1
-
-			if not running and not tester.tests[i].fold and str(tester.tests[i].rtcode) == '0' and tester.prog_out[i]:
-				if tester.tests[i].is_correct_answer(tester.prog_out[i]):
-					type = 'decline'
-				else:
-					type = 'accept'
-				accdec = tester.tests[i].get_accdec(
-					i,
-					pt,
-					self.on_accdec_action,
-					type,
-					self.view
-				)
-				configs.append(accdec)
 			
 			if not running and not tester.tests[i].fold and str(tester.tests[i].rtcode) == '0' and tester.prog_out[i]:
 				answer_template = open(root_dir + '/Highlight/test_answer.html').read()
@@ -657,6 +643,20 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 				answer_html = '<style>' + styles + '</style>' + answer_html
 				answer_phantom = Phantom(Region(pt), answer_html, sublime.LAYOUT_BLOCK)
 				configs.append(answer_phantom)
+
+			if not running and not tester.tests[i].fold and str(tester.tests[i].rtcode) == '0' and tester.prog_out[i]:
+				if tester.tests[i].is_correct_answer(tester.prog_out[i]):
+					type = 'decline'
+				else:
+					type = 'accept'
+				accdec = tester.tests[i].get_accdec(
+					i,
+					pt,
+					self.on_accdec_action,
+					type,
+					self.view
+				)
+				configs.append(accdec)
 
 			if not tester.tests[i].fold:
 				pt += 2
