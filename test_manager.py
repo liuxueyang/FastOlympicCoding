@@ -1,3 +1,4 @@
+import html
 import sublime, sublime_plugin
 import os
 from os.path import dirname
@@ -638,6 +639,7 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 				else:
 					correct_text = 'No answers'
 
+				correct_text = html.escape(correct_text).replace('\n', '<br>')
 				answer_html = answer_template.format(correct_text=correct_text)
 				styles = get_test_styles(self.view)
 				answer_html = '<style>' + styles + '</style>' + answer_html
