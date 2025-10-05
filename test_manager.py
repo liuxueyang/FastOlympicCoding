@@ -120,11 +120,15 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 			self.rtcode = rtcode
 
 		def get_nice_runtime(self):
-			runtime = self.runtime
-			if runtime < 5000:
-				return '&nbsp;' * (2 - len(str(self.runtime))) + str(runtime) + 'ms'
+			try:
+				runtime_num = int(self.runtime)
+			except (ValueError, TypeError):
+				return '-'
+			if runtime_num < 5000:
+				s = '{:<4}ms'.format(runtime_num)
 			else:
-				return str(runtime // 1000) + 's'
+				s = '{:<4}s'.format(runtime_num // 1000)
+			return s.replace(' ', '&nbsp;')
 
 		def get_config(self, i, pt, _cb_act, _out, view, running=False):	
 			if not running:
