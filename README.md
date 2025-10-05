@@ -60,3 +60,6 @@ Fast Olympic Coding plugin for Sublime Text 3 & 4
  * to select a stack frame (type `FastOlympicCoding: Select Frame` in the command palette)
  * the only one dependency is xcode (you can install it with `xcode-select --install`)
 
+## Resources
+
+- <a href="https://www.flaticon.com/free-icons/right-arrow" title="right arrow icons">Right arrow icons created by Freepik - Flaticon</a>
