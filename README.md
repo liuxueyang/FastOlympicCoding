@@ -63,7 +63,7 @@ Fast Olympic Coding plugin for Sublime Text 3 & 4
 
 ### New features
 
-This are some minor new features in this fork.
+The following are some minor new features in this fork.
 
 1. Show correct answers in each testcase.
 2. Add a "delete" button on each testcase.
@@ -71,7 +71,7 @@ This are some minor new features in this fork.
 4. Change icons for the input and output.
 5. Print the random seed at the beginning of the stree test log.
 
-![Screenshot](image.png)
+![Screenshot](ScreenShots/NewFeature.png)
 
 ### Resources
 
