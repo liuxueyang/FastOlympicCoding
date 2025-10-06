@@ -60,6 +60,17 @@ Fast Olympic Coding plugin for Sublime Text 3 & 4
  * to select a stack frame (type `FastOlympicCoding: Select Frame` in the command palette)
  * the only one dependency is xcode (you can install it with `xcode-select --install`)
 
-## Resources
+### New features
+
+This are some minor new features in this fork.
+
+1. Show correct answers in each testcase.
+2. Add a "delete" button on each testcase.
+3. Add a "copy" button to copy input of each testcase.
+4. Change icons for the input and output.
+
+![Screenshot](image.png)
+
+### Resources
 
 - <a href="https://www.flaticon.com/free-icons/right-arrow" title="right arrow icons">Right arrow icons created by Freepik - Flaticon</a>
