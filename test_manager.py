@@ -1609,7 +1609,8 @@ class ViewTesterCommand(sublime_plugin.TextCommand):
 	def run(self, edit, action=None, clr_tests=False, text=None, sync_out=True, \
 			crash_line=None, value=None, pos=None, frames=None, use_debugger=False):
 		v = self.view
-		scope_name = v.scope_name(v.sel()[0].begin()).rstrip()
+		pt = v.sel()[0].begin() if len(v.sel()) else 0
+		scope_name = v.scope_name(pt).rstrip()
 		file_syntax = scope_name.split()[0]
 		if action == 'insert':
 			v.insert(edit, v.sel()[0].begin(), text)
