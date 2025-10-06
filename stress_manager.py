@@ -42,11 +42,13 @@ class StressManagerCommand(sublime_plugin.TextCommand):
 				'output': ''
 			}
 
-	def _print_log(self, test_data, good_output, bad_output):
+	def _print_log(self, test_data, good_output, bad_output, seed=None):
 		view = self.view
-		text = 'test #{test_id}:\n{test_data}\ngood:\n{good_output}\nbad:\n{bad_output}'
+		seed_line = ('seed: {seed}\n'.format(seed=seed)) if seed is not None else ''
+		text = '{seed_line}test #{test_id}:\n{test_data}\ngood:\n{good_output}\nbad:\n{bad_output}'
 		text = text.format(
 			test_id=self.test_id,
+			seed_line=seed_line,
 			test_data=self.shift_right(test_data),
 			good_output=self.shift_right(good_output),
 			bad_output=self.shift_right(bad_output)
@@ -62,11 +64,11 @@ class StressManagerCommand(sublime_plugin.TextCommand):
 
 		data = self.perfom_run(self.process['gen'], seed, tl)
 		if not type(data) == str:
-			self._print_log(data['message'], '', '')
+			self._print_log(data['message'], '', '', seed=seed)
 			return data
 
 		test_data = data
-		self._print_log(test_data, '', '')
+		self._print_log(test_data, '', '', seed=seed)
 		err = False	
 		data = self.perfom_run(self.process['good'], test_data, tl)
 		if not type(data) == str:
@@ -74,7 +76,7 @@ class StressManagerCommand(sublime_plugin.TextCommand):
 			err = True
 		else:
 			good_output = data
-		self._print_log(test_data, good_output, '')
+		self._print_log(test_data, good_output, '', seed=seed)
 
 		data = self.perfom_run(self.process['bad'], test_data, tl)
 		if not type(data) == str:
@@ -83,7 +85,7 @@ class StressManagerCommand(sublime_plugin.TextCommand):
 		else:
 			bad_output = data
 
-		self._print_log(test_data, good_output, bad_output)
+		self._print_log(test_data, good_output, bad_output, seed=seed)
 
 		resp = {
 			'test_data': test_data,

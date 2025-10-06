@@ -69,6 +69,7 @@ This are some minor new features in this fork.
 2. Add a "delete" button on each testcase.
 3. Add a "copy" button to copy input of each testcase.
 4. Change icons for the input and output.
+5. Print the random seed at the beginning of the stree test log.
 
 ![Screenshot](image.png)
 
