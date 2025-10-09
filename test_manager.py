@@ -312,14 +312,37 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 		def run_test(self, id):
 			tests = self.tests
 			process_manager = self.process_manager
+			# Compile asynchronously to avoid blocking the main UI thread
 			self.on_status_change('COMPILE')
-			process_manager.compile()
-			self.running_test = id
-			self.running_new = False
-			self.prog_out[id] = ''
-			self.insert_test(id)
-			if type(self.process_manager) == ProcessManager:
-				sublime.set_timeout_async(self.__process_listener)
+			def do_compile():
+				cmp_data = None
+				try:
+					cmp_data = process_manager.compile()
+				except Exception:
+					cmp_data = None
+				# Schedule continuation on main thread after compile
+				def after_compile(cmp_data=cmp_data, self=self, id=id):
+					# If compilation failed (non-zero return code), report and stop
+					if cmp_data is not None and cmp_data[0] != 0:
+						# insert compile output into view via callback
+						self.on_stop(cmp_data[0], -1)
+						return
+					# Proceed to run the test
+					self.running_test = id
+					self.running_new = False
+					self.prog_out[id] = ''
+					self.insert_test(id)
+					if type(self.process_manager) == ProcessManager:
+						sublime.set_timeout_async(self.__process_listener)
+				# run after_compile on main thread (via timeout so it runs soon)
+				try:
+					# Sublime's API expects main-thread calls; use set_timeout
+					sublime.set_timeout(after_compile, 10)
+				except Exception:
+					# Fallback: call directly
+					after_compile()
+			# Start compile in a background task
+			sublime.set_timeout_async(do_compile, 10)
 
 		def have_pretests(self):
 			n = self.test_iter
