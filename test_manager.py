@@ -217,7 +217,7 @@ class TestManagerCommand(sublime_plugin.TextCommand):
 				self.process_manager.set_calls(self.__on_out, self.__on_stop, on_status_change)
 
 		def __on_stop(self, rtcode, runtime=-1, crash_line=None):
-			self.prog_out[self.running_test] = self.prog_out[self.running_test].rstrip()
+			self.prog_out[self.running_test] = "\n".join([x.rstrip() for x in self.prog_out[self.running_test].split("\n")])
 			self.proc_run = False
 
 			if self.running_new:

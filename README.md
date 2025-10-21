@@ -70,6 +70,8 @@ The following are some minor new features in this fork.
 3. Add a "copy" button to copy input of each testcase.
 4. Change icons for the input and output.
 5. Print the random seed at the beginning of the stree test log.
+6. Compile async.
+7. Ignore trailing whitespaces when comparing results even if there are multiple lines in the results.
 
 ![Screenshot](ScreenShots/NewFeature.png)
 
